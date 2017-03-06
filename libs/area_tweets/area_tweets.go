@@ -1,7 +1,6 @@
-package main
+package area_tweets
+
 import (
-  "log"
-  "fmt"
   "net/http"
   "os"
   "github.com/dghubble/go-twitter/twitter"
@@ -9,15 +8,18 @@ import (
   "golang.org/x/oauth2/clientcredentials"
 )
 
-func determineListenAddress() (string, error) {
-  port := os.Getenv("PORT")
-  if port == "" {
-    return "", fmt.Errorf("$PORT not set")
-  }
-  return ":" + port, nil
+func twitterClient() *twitter.Client {
+  config := &clientcredentials.Config{
+      ClientID: os.Getenv("TWITTER_CONSUMER_KEY"),
+      ClientSecret: os.Getenv("TWITTER_CONSUMER_SECRET"),
+      TokenURL: "https://api.twitter.com/oauth2/token",
+    }
+  httpClient := config.Client(oauth2.NoContext)
+  client := twitter.NewClient(httpClient)
+  return client
 }
 
-func hello(w http.ResponseWriter, r *http.Request) {
+func localizedSearch() (*twitter.Search, *http.Response, error) {
   config := &clientcredentials.Config{
       ClientID: os.Getenv("TWITTER_CONSUMER_KEY"),
       ClientSecret: os.Getenv("TWITTER_CONSUMER_SECRET"),
@@ -32,19 +34,5 @@ func hello(w http.ResponseWriter, r *http.Request) {
       ResultType: "recent",
       Count: 100,
   })
-  fmt.Fprintln(w, err)
-  fmt.Fprintln(w, search)
-  fmt.Fprintln(w, resp)
-}
-
-func main() {
-  addr, err := determineListenAddress()
-  if err != nil {
-    log.Fatal(err)
-  }
-  http.HandleFunc("/", hello)
-  log.Printf("Listening on %s...\n", addr)
-  if err := http.ListenAndServe(addr, nil); err != nil {
-    panic(err)
-  }
+  return search, resp, err
 }
