@@ -4,9 +4,7 @@ import (
   "fmt"
   "net/http"
   "os"
-  "github.com/dghubble/go-twitter/twitter"
-  "golang.org/x/oauth2"
-  "golang.org/x/oauth2/clientcredentials"
+  "around/libs/area_tweets"
 )
 
 func determineListenAddress() (string, error) {
@@ -18,20 +16,8 @@ func determineListenAddress() (string, error) {
 }
 
 func hello(w http.ResponseWriter, r *http.Request) {
-  config := &clientcredentials.Config{
-      ClientID: os.Getenv("TWITTER_CONSUMER_KEY"),
-      ClientSecret: os.Getenv("TWITTER_CONSUMER_SECRET"),
-      TokenURL: "https://api.twitter.com/oauth2/token",
-    }
-  httpClient := config.Client(oauth2.NoContext)
-  client := twitter.NewClient(httpClient)
+  search, resp, err := area_tweets.LocalizedSearch()
 
-  search, resp, err := client.Search.Tweets(&twitter.SearchTweetParams{
-      Query: "",
-      Geocode: "43.6425662,-79.3958115,1km",
-      ResultType: "recent",
-      Count: 100,
-  })
   fmt.Fprintln(w, err)
   fmt.Fprintln(w, search)
   fmt.Fprintln(w, resp)
